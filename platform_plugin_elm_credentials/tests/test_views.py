@@ -97,19 +97,19 @@ class ElmCredentialBuilderAPIViewTest(APITestCase):
         self.assertNotIn("Content-Disposition", response.headers)
         self.assertEqual(
             response_data["deliveryDetails"]["deliveryAddress"],
-            self.credential_user.email,
+            [self.credential_user.email],
         )
-        self.assertEqual(credential["issuer"]["legalName"]["en"], self.org)
-        self.assertEqual(credential["credentialSubject"]["givenName"]["en"], "John")
-        self.assertEqual(credential["credentialSubject"]["familyName"]["en"], "Doe")
+        self.assertEqual(credential["issuer"]["legalName"]["en"], [self.org])
+        self.assertEqual(credential["credentialSubject"]["givenName"]["en"], ["John"])
+        self.assertEqual(credential["credentialSubject"]["familyName"]["en"], ["Doe"])
         self.assertEqual(
             credential["credentialSubject"]["fullName"]["en"],
-            "John Doe",
+            ["John Doe"],
         )
         self.assertEqual(
-            credential["credentialSubject"]["hasClaim"]["awardedBy"]["awardingBody"][
-                "location"
-            ]["address"]["countryCode"]["id"].split("/")[-1],
+            credential["credentialSubject"]["hasClaim"][0]["provenBy"]["awardedBy"][
+                "awardingBody"
+            ][0]["location"][0]["address"][0]["countryCode"]["id"].split("/")[-1],
             self.other_course_settings["ELM_CREDENTIALS_DEFAULTS"]["org_country_code"],
         )
         self.assertEqual(
@@ -148,19 +148,19 @@ class ElmCredentialBuilderAPIViewTest(APITestCase):
         self.assertNotIn("Content-Disposition", response.headers)
         self.assertEqual(
             response_data["deliveryDetails"]["deliveryAddress"],
-            self.credential_user.email,
+            [self.credential_user.email],
         )
-        self.assertEqual(credential["issuer"]["legalName"]["en"], self.org)
-        self.assertEqual(credential["credentialSubject"]["givenName"]["en"], "John")
-        self.assertEqual(credential["credentialSubject"]["familyName"]["en"], "Doe")
+        self.assertEqual(credential["issuer"]["legalName"]["en"], [self.org])
+        self.assertEqual(credential["credentialSubject"]["givenName"]["en"], ["John"])
+        self.assertEqual(credential["credentialSubject"]["familyName"]["en"], ["Doe"])
         self.assertEqual(
             credential["credentialSubject"]["fullName"]["en"],
-            "John Doe",
+            ["John Doe"],
         )
         self.assertEqual(
-            credential["credentialSubject"]["hasClaim"]["awardedBy"]["awardingBody"][
-                "location"
-            ]["address"]["countryCode"]["id"].split("/")[-1],
+            credential["credentialSubject"]["hasClaim"][0]["provenBy"]["awardedBy"][
+                "awardingBody"
+            ][0]["location"][0]["address"][0]["countryCode"]["id"].split("/")[-1],
             settings.ELM_CREDENTIALS_DEFAULTS.get("org_country_code"),
         )
         self.assertEqual(
@@ -200,19 +200,19 @@ class ElmCredentialBuilderAPIViewTest(APITestCase):
         self.assertNotIn("Content-Disposition", response.headers)
         self.assertEqual(
             response_data["deliveryDetails"]["deliveryAddress"],
-            self.credential_user.email,
+            [self.credential_user.email],
         )
-        self.assertEqual(credential["issuer"]["legalName"]["en"], self.org)
-        self.assertEqual(credential["credentialSubject"]["givenName"]["en"], "John")
-        self.assertEqual(credential["credentialSubject"]["familyName"]["en"], "Doe")
+        self.assertEqual(credential["issuer"]["legalName"]["en"], [self.org])
+        self.assertEqual(credential["credentialSubject"]["givenName"]["en"], ["John"])
+        self.assertEqual(credential["credentialSubject"]["familyName"]["en"], ["Doe"])
         self.assertEqual(
             credential["credentialSubject"]["fullName"]["en"],
-            "John Doe",
+            ["John Doe"],
         )
         self.assertEqual(
-            credential["credentialSubject"]["hasClaim"]["awardedBy"]["awardingBody"][
-                "location"
-            ]["address"]["countryCode"]["id"].split("/")[-1],
+            credential["credentialSubject"]["hasClaim"][0]["provenBy"]["awardedBy"][
+                "awardingBody"
+            ][0]["location"][0]["address"][0]["countryCode"]["id"].split("/")[-1],
             "ESP",
         )
         self.assertEqual(

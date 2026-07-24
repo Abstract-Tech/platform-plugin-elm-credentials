@@ -44,6 +44,22 @@ def to_camel(string: str) -> str:
     return words[0] + "".join(word.capitalize() for word in words[1:])
 
 
+def as_lang_string(value: str, lang: str = "en") -> dict:
+    """
+    Wrap a value in ELMv3 multilingual langString format.
+
+    Example: as_lang_string("Online") -> {"en": ["Online"]}
+
+    Args:
+        value (str): The value to wrap.
+        lang (str): The language code. Defaults to "en".
+
+    Returns:
+        dict: The value in langString format.
+    """
+    return {lang: [value]}
+
+
 def get_fullname(name: str) -> Tuple[str, str]:
     """
     Returns the first and last name from a full name.

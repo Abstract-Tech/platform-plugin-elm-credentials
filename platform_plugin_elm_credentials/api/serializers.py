@@ -5,7 +5,12 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from platform_plugin_elm_credentials.api.utils import get_current_datetime, to_camel, to_iso_format
+from platform_plugin_elm_credentials.api.utils import (
+    as_lang_string,
+    get_current_datetime,
+    to_camel,
+    to_iso_format,
+)
 
 
 class QueryParamsModel(BaseModel):
@@ -105,7 +110,7 @@ class Location(ConfigModel):
 
     id: str = "urn:epass:location:1"
     type: str = "Location"
-    address: Address = Field(validation_alias="address")
+    address: List[Address] = Field(validation_alias="address")
 
 
 class Mode(ConfigModel):
@@ -124,7 +129,9 @@ class Mode(ConfigModel):
         },
         validation_alias="in_scheme",
     )
-    pref_label: dict = Field(default={"en": "Online"}, validation_alias="pref_label")
+    pref_label: dict = Field(
+        default_factory=lambda: as_lang_string("Online"), validation_alias="pref_label"
+    )
 
 
 class Language(LanguageBase):
@@ -146,7 +153,7 @@ class AwardingBody(ConfigModel):
     type: str = "Organisation"
     alt_label: dict = Field(validation_alias="alt_label")
     legal_name: dict = Field(validation_alias="legal_name")
-    location: Location = Field(validation_alias="location")
+    location: List[Location] = Field(validation_alias="location")
 
 
 class IdVerification(ConfigModel):
@@ -166,7 +173,7 @@ class IdVerification(ConfigModel):
         validation_alias="in_scheme",
     )
     pref_label: dict = Field(
-        default={"en": "Unsupervised with ID verification"},
+        default_factory=lambda: as_lang_string("Unsupervised with ID verification"),
         validation_alias="pref_label",
     )
 
@@ -206,7 +213,7 @@ class AwardedBy(ConfigModel):
 
     id: str = "urn:epass:awardingProcess:1"
     type: str = "AwardingProcess"
-    awarding_body: AwardingBody = Field(validation_alias="awarding_body")
+    awarding_body: List[AwardingBody] = Field(validation_alias="awarding_body")
     awarding_date: str = Field(validation_alias="awarding_date")
 
 
@@ -258,6 +265,7 @@ class DisplayParameter(ConfigModel):
     id: str = "urn:epass:displayParameter:1"
     type: str = "DisplayParameter"
     primary_language: PrimaryLanguage = Field(validation_alias="primary_language")
+    language: List[Language] = Field(validation_alias="language")
     title: dict = Field(validation_alias="title")
 
 
@@ -273,7 +281,7 @@ class CredentialSubject(ConfigModel):
     given_name: dict = Field(validation_alias="given_name")
     family_name: dict = Field(validation_alias="family_name")
     full_name: dict = Field(validation_alias="full_name")
-    has_claim: HasClaim = Field(validation_alias="has_claim")
+    has_claim: List[HasClaim] = Field(validation_alias="has_claim")
 
 
 class Issuer(ConfigModel):
@@ -300,7 +308,7 @@ class DeliveryDetails(ConfigModel):
     This property is used in the ELMCredentialModel model.
     """
 
-    delivery_address: str = Field(validation_alias="delivery_address")
+    delivery_address: List[str] = Field(validation_alias="delivery_address")
 
 
 class ELMBody(ConfigModel):
@@ -311,23 +319,24 @@ class ELMBody(ConfigModel):
 
     id: str = Field(default=f"urn:credential:{uuid4()}")
     type: List[str] = ["VerifiableCredential", "EuropeanDigitalCredential"]
-    context: List[str] = Field(
+    context: Optional[List[str]] = Field(
         serialization_alias="@context",
-        default=[
-            "https://www.w3.org/2018/credentials/v1",
-            "https://data.europa.eu/snb/model/context/edc-ap",
-        ],
+        default=None,
     )
-    credential_schema: dict = {
-        "id": "http://data.europa.eu/snb/model/ap/edc-generic-no-cv",
-        "type": "ShaclValidator2017",
-    }
+    credential_schema: List[dict] = Field(
+        default_factory=lambda: [
+            {
+                "id": "http://data.europa.eu/snb/model/ap/edc-generic-no-cv",
+                "type": "ShaclValidator2017",
+            }
+        ]
+    )
     valid_until: Optional[str] = Field(validation_alias="valid_until")
     expiration_date: Optional[str] = Field(validation_alias="expiration_date")
     valid_from: str = Field(default_factory=get_current_datetime)
     issuance_date: str = Field(default_factory=get_current_datetime)
     issued: str = Field(default_factory=get_current_datetime)
-    issuer: Issuer = Field(validation_alias="issuer")
+    issuer: Optional[Issuer] = Field(default=None, validation_alias="issuer")
     credential_subject: CredentialSubject = Field(validation_alias="credential_subject")
     display_parameter: DisplayParameter = Field(validation_alias="display_parameter")
 

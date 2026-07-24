@@ -22,7 +22,7 @@ from platform_plugin_elm_credentials.api.serializers import (
     ProvenBy,
     SpecifiedBy,
 )
-from platform_plugin_elm_credentials.api.utils import get_fullname, to_iso_format
+from platform_plugin_elm_credentials.api.utils import as_lang_string, get_fullname, to_iso_format
 
 
 class CredentialBuilder:
@@ -124,9 +124,9 @@ class CredentialBuilder:
         Returns:
             str: The title of the credential.
         """
-        return {
-            "en": f"Course certificate for passing {self.course_block.display_name} course"
-        }
+        return as_lang_string(
+            f"Course certificate for passing {self.course_block.display_name} course"
+        )
 
     @property
     def grade(self) -> Grade:
@@ -137,7 +137,7 @@ class CredentialBuilder:
             Grade: The grade of the credential.
         """
         note = str(round(float(self.certificate.grade) * 100, 2))
-        return Grade(note_literal={"en": note})
+        return Grade(note_literal=as_lang_string(note))
 
     @property
     def issuer(self) -> Issuer:
@@ -150,8 +150,8 @@ class CredentialBuilder:
         issuer_id = self.credential_settings.get("issuer_id")
         return Issuer(
             id=issuer_id or str(uuid4()),
-            alt_label={"en": self.course_block.org},
-            legal_name={"en": self.course_block.org},
+            alt_label=as_lang_string(self.course_block.org),
+            legal_name=as_lang_string(self.course_block.org),
         )
 
     def get_maped_language(self) -> str:
@@ -187,12 +187,12 @@ class CredentialBuilder:
         given_name, family_name = get_fullname(self.full_name)
 
         awarding_body = AwardingBody(
-            alt_label={"en": self.course_block.org},
-            legal_name={"en": self.course_block.org},
-            location=Location(address=Address(country_code=self.org_country_code)),
+            alt_label=as_lang_string(self.course_block.org),
+            legal_name=as_lang_string(self.course_block.org),
+            location=[Location(address=[Address(country_code=self.org_country_code)])],
         )
         awarded_by = AwardedBy(
-            awarding_body=awarding_body,
+            awarding_body=[awarding_body],
             awarding_date=to_iso_format(self.certificate.created_date),
         )
         specified_by = SpecifiedBy(
@@ -213,16 +213,17 @@ class CredentialBuilder:
             specified_by=specified_by,
         )
         credential_subject = CredentialSubject(
-            given_name={"en": given_name},
-            family_name={"en": family_name},
-            full_name={"en": self.full_name},
-            has_claim=has_claim,
+            given_name=as_lang_string(given_name),
+            family_name=as_lang_string(family_name),
+            full_name=as_lang_string(self.full_name),
+            has_claim=[has_claim],
         )
         display_parameter = DisplayParameter(
             primary_language=self.primary_language,
-            title={"en": self.course_block.display_name},
+            language=[self.language],
+            title=as_lang_string(self.course_block.display_name),
         )
-        delivery_details = DeliveryDetails(delivery_address=self.user.email)
+        delivery_details = DeliveryDetails(delivery_address=[self.user.email])
 
         return {
             "credential": {
