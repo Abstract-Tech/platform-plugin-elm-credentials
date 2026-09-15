@@ -9,6 +9,7 @@ from platform_plugin_elm_credentials.api.serializers import (
     AwardingBody,
     CountryCode,
     CredentialSubject,
+    CreditPoint,
     DeliveryDetails,
     DisplayParameter,
     Grade,
@@ -16,8 +17,10 @@ from platform_plugin_elm_credentials.api.serializers import (
     IdVerification,
     Issuer,
     Language,
+    LearningOutcome,
     Location,
     Mode,
+    Note,
     PrimaryLanguage,
     ProvenBy,
     SpecifiedBy,
@@ -154,6 +157,78 @@ class CredentialBuilder:
             legal_name=as_lang_string(self.course_block.org),
         )
 
+    @property
+    def learning_outcomes(self):
+        """
+        Get the learning outcomes (course topics) of the credential, if configured.
+
+        Read from the ``topics`` key of ``ELM_CREDENTIALS_DEFAULTS``: a list of
+        topic strings, e.g. ["Introduction to Python", "Version Control with Git"].
+
+        Returns:
+            list[LearningOutcome] | None: The learning outcomes, or None if not configured.
+        """
+        topics = self.credential_settings.get("topics")
+        if not topics:
+            return None
+        return [
+            LearningOutcome(
+                id=f"urn:epass:learningOutcome:{index}",
+                title=as_lang_string(topic),
+            )
+            for index, topic in enumerate(topics, start=1)
+        ]
+
+    @property
+    def credit_points(self):
+        """
+        Get the credit points (e.g. ECTS) of the credential, if configured.
+
+        Both ``credit_points`` (the numeric value, e.g. "5") and
+        ``credit_framework_id`` (the EDC Controlled List of Educational Credit
+        Systems concept id for the framework, e.g. the ECTS entry) must be set
+        in ``ELM_CREDENTIALS_DEFAULTS`` for this to be included — there is no
+        default framework id, since shipping an unverified one would be worse
+        than omitting the property.
+
+        Returns:
+            list[CreditPoint] | None: The credit points, or None if not configured.
+        """
+        points = self.credential_settings.get("credit_points")
+        framework_id = self.credential_settings.get("credit_framework_id")
+        if not points or not framework_id:
+            return None
+        return [
+            CreditPoint(
+                id="urn:epass:creditPoint:1",
+                framework={"id": framework_id, "type": "Concept"},
+                point=str(points),
+            )
+        ]
+
+    @property
+    def additional_notes(self):
+        """
+        Get free-text additional notes for the credential, if configured.
+
+        Currently used for the instructor name, read from the
+        ``instructor_name`` key of ``ELM_CREDENTIALS_DEFAULTS``. ELM has no
+        dedicated field for a named signatory (the electronic seal fulfils
+        that role), so this is recorded as a plain note instead.
+
+        Returns:
+            list[Note] | None: The additional notes, or None if not configured.
+        """
+        instructor_name = self.credential_settings.get("instructor_name")
+        if not instructor_name:
+            return None
+        return [
+            Note(
+                id="urn:epass:note:instructor:1",
+                note_literal=as_lang_string(f"Instructor: {instructor_name}"),
+            )
+        ]
+
     def get_maped_language(self) -> str:
         """
         Get the language code mapped according to the language code defined.
@@ -199,6 +274,9 @@ class CredentialBuilder:
             title=self.title,
             language=self.language,
             mode=Mode(),
+            learning_outcome=self.learning_outcomes,
+            credit_point=self.credit_points,
+            additional_note=self.additional_notes,
         )
         proven_by = ProvenBy(
             awarded_by=awarded_by,

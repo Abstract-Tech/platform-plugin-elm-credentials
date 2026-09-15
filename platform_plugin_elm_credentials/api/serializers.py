@@ -190,6 +190,45 @@ class Grade(ConfigModel):
     note_literal: dict = Field(validation_alias="note_literal")
 
 
+class Note(ConfigModel):
+    """Pydantic model for ELMv3 Note property.
+
+    A generic free-text note (``elm:additionalNote``). Used, e.g., to record
+    the instructor name -- ELM has no dedicated field for a named signatory,
+    since the electronic seal fulfils that role instead.
+    """
+
+    id: str
+    type: str = "Note"
+    note_literal: dict = Field(validation_alias="note_literal")
+
+
+class LearningOutcome(ConfigModel):
+    """Pydantic model for ELMv3 LearningOutcome property.
+
+    Stores an individual expected learning outcome (e.g. a course topic) in the
+    format required by ELMv3. This property is used in the SpecifiedBy model.
+    """
+
+    id: str
+    type: str = "LearningOutcome"
+    title: dict = Field(validation_alias="title")
+
+
+class CreditPoint(ConfigModel):
+    """Pydantic model for ELMv3 CreditPoint property.
+
+    Stores the credit points (e.g. ECTS) assigned to the learning achievement
+    specification, following an educational credit system. This property is
+    used in the SpecifiedBy model.
+    """
+
+    id: str
+    type: str = "CreditPoint"
+    framework: dict = Field(validation_alias="framework")
+    point: str = Field(validation_alias="point")
+
+
 class SpecifiedBy(ConfigModel):
     """Pydantic model for ELMv3 SpecifiedBy property.
 
@@ -202,6 +241,15 @@ class SpecifiedBy(ConfigModel):
     title: dict = Field(validation_alias="title")
     language: Language = Field(validation_alias="language")
     mode: Mode = Field(validation_alias="mode")
+    learning_outcome: Optional[List[LearningOutcome]] = Field(
+        default=None, validation_alias="learning_outcome"
+    )
+    credit_point: Optional[List[CreditPoint]] = Field(
+        default=None, validation_alias="credit_point"
+    )
+    additional_note: Optional[List[Note]] = Field(
+        default=None, validation_alias="additional_note"
+    )
 
 
 class AwardedBy(ConfigModel):
@@ -317,11 +365,14 @@ class ELMBody(ConfigModel):
     Stores all the data in the credential property required by ELMv3.
     """
 
-    id: str = Field(default=f"urn:credential:{uuid4()}")
+    id: str = Field(default_factory=lambda: f"urn:credential:{uuid4()}")
     type: List[str] = ["VerifiableCredential", "EuropeanDigitalCredential"]
-    context: Optional[List[str]] = Field(
+    context: List[str] = Field(
         serialization_alias="@context",
-        default=None,
+        default=[
+            "https://www.w3.org/2018/credentials/v1",
+            "https://data.europa.eu/snb/model/context/edc-ap",
+        ],
     )
     credential_schema: List[dict] = Field(
         default_factory=lambda: [
